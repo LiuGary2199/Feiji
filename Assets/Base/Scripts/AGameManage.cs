@@ -20,18 +20,22 @@ public class AGameManage : MonoBehaviour
     void Start()
     {
          m_settingButton.onClick.AddListener(()=>
-        {
+        { A_AudioManager.Instance.PlaySound("anniu",1f);
             Time.timeScale = 0;
             m_settingPanel.SetActive(true);
         });
         m_startButton.onClick.AddListener(()=>
-        {
+        { A_AudioManager.Instance.PlaySound("anniu",1f);
             m_startButton.gameObject.SetActive(false);
             m_isFuhuo = false;
             m_flyBaby.StartFly();
             StartShotArea();
             StartBottomArea();
         });
+        m_FuhuoPanelScript.OnJiesuan = ()=>
+        {
+            m_GameOverPanelScript.Show(m_bottomArea.GetScore(), m_bottomArea.GetGold());
+        };
 
         // 注册事件监听
         GameEventManager.OnGameOver += HandleGameOver;
@@ -50,8 +54,11 @@ public class AGameManage : MonoBehaviour
     private void HandleGameOver()
     {
         if (m_isFuhuo){
+             A_AudioManager.Instance.PlaySound("jiesuan",1f);
             m_GameOverPanelScript.Show(m_bottomArea.GetScore(), m_bottomArea.GetGold());
         }else{
+             A_AudioManager.Instance.PlaySound("jiesuan",1f);
+
             m_FuhuoPanelScript.Show(m_bottomArea.GetScore(), m_bottomArea.GetGold());
         }
         // 显示游戏结束界面

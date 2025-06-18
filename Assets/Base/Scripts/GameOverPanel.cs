@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,23 +7,44 @@ public class GameOverPanel : MonoBehaviour
     public Button m_RestartButton;    // 重新开始按钮
     public Button m_AdContinueButton; // 看广告继续按钮
     public Text m_ScoreText;          // 显示最终分数
-
+    public Button m_JieSuanButton; // 看广告继续按钮
+    public Action OnJiesuan;
     private void Start()
     {
 
+ if (m_RestartButton!=null){
           m_RestartButton.onClick.AddListener(() =>
         {
+                                A_AudioManager.Instance.PlaySound("anniu",1f);
            OnRestartClick();
         });
+ }
+
+        if (m_JieSuanButton!=null){
+            m_JieSuanButton.onClick.AddListener(() =>
+                {
+                                        A_AudioManager.Instance.PlaySound("anniu",1f);
+                    gameObject.SetActive(false);
+                    OnJiesuan?.Invoke();
+                });
+
+        }
+        
 
         m_AdContinueButton.onClick.AddListener(() =>
         {
             A_ADManager.Instance.playRewardVideo((success) =>
             {
-               // 隐藏游戏结束界面
-            Hide();
-            // 继续游戏
-            GameEventManager.TriggerGameContinue();
+                if (success)
+                {
+                    A_AudioManager.Instance.PlaySound("anniu",1f);
+                    Hide();
+                    GameEventManager.TriggerGameContinue();
+                }
+                else
+                {
+                  
+                }
             });
         });
     }
@@ -30,8 +52,15 @@ public class GameOverPanel : MonoBehaviour
     private void OnDestroy()
     {
         // 取消按钮点击事件
-        m_RestartButton.onClick.RemoveListener(OnRestartClick);
-        m_AdContinueButton.onClick.RemoveListener(OnAdContinueClick);
+         if (m_RestartButton!=null){
+             m_RestartButton.onClick.RemoveListener(OnRestartClick);
+         }
+         if (m_AdContinueButton!=null){
+            m_AdContinueButton.onClick.RemoveListener(OnAdContinueClick);
+         }
+
+       
+        
     }
 
     // 显示游戏结束界面

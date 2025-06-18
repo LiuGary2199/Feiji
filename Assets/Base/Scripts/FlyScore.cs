@@ -12,6 +12,7 @@ public class FlyScore : MonoBehaviour
     public Image m_MainImage;        // 主物体的Image组件
     public Image m_ChildImage;       // 子物体的Image组件
     public Sprite[] m_Sprites;       // 精灵数组
+    public Flygolg m_flygolgPrefab;  // 金币预制体
     private RectTransform m_rectTransform;
     private float m_moveSpeed = 200f;
     private float m_amplitude = 100f;
@@ -23,6 +24,11 @@ public class FlyScore : MonoBehaviour
     private float m_fallSpeed = 800f; // 下落速度
     private List<Flyqiu> m_flyqiuList = new List<Flyqiu>();
     private Rigidbody2D m_rigidbody;
+    public Text scoreText;
+    private Sequence m_currentSequence; // 当前动画序列
+    private bool m_isDestroying = false; // 是否正在销毁中
+
+    private int[] scores = new int[]{ 20,25,30,35,40,45,50};
 
     // 爆炸相关参数
     private float m_explosionForce = 2f; // 爆炸力度
@@ -47,6 +53,16 @@ public class FlyScore : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        // 清理所有动画
+        if (m_currentSequence != null)
+        {
+            m_currentSequence.Kill();
+            m_currentSequence = null;
+        }
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.gameObject.layer == LayerMask.NameToLayer("Balloon"))
@@ -58,14 +74,33 @@ public class FlyScore : MonoBehaviour
         }
     }
 
+    private void PlayGoldImageAnimation(Image goldImage)
+    {
+        if (goldImage == null) return;
+
+        // 设置初始状态
+        goldImage.gameObject.SetActive(true);
+        goldImage.color = new Color(1f, 1f, 1f, 1f);
+        RectTransform goldRect = goldImage.GetComponent<RectTransform>();
+        Vector2 startPos = goldRect.anchoredPosition;
+
+        // 创建上升和淡出动画
+        Sequence goldSequence = DOTween.Sequence();
+        goldSequence.Append(goldRect.DOAnchorPosY(startPos.y + 150f, 0.8f).SetEase(Ease.OutQuad));
+        goldSequence.Join(goldImage.DOFade(0f, 0.8f));
+        goldSequence.OnComplete(() => {
+            goldImage.gameObject.SetActive(false);
+        });
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        if (m_isDestroying) return;
+
         // 检查碰撞的Layer
         if (collision.gameObject.layer == LayerMask.NameToLayer("BottomWall"))
         {
-            // 触发全局加分事件
-            GameEventManager.TriggerScoreAdded(25);
-            
+            m_isDestroying = true;
             // 停止所有移动
             m_isMoving = false;
             m_isFalling = false;
@@ -80,39 +115,83 @@ public class FlyScore : MonoBehaviour
             }
 
             // 清除旋转
-            m_rectTransform.localRotation = Quaternion.identity;
-
-            // 设置位置到碰撞物体的Y位置
-            Vector2 currentPos = m_rectTransform.anchoredPosition;
-            RectTransform collisionRect = collision.gameObject.GetComponent<RectTransform>();
-            if (collisionRect != null)
+            if (m_rectTransform != null)
             {
-                currentPos.y = collisionRect.anchoredPosition.y+40f;
-                m_rectTransform.anchoredPosition = currentPos;
+                m_rectTransform.localRotation = Quaternion.identity;
+
+                // 设置位置到碰撞物体的Y位置
+                Vector2 currentPos = m_rectTransform.anchoredPosition;
+                RectTransform collisionRect = collision.gameObject.GetComponent<RectTransform>();
+                if (collisionRect != null)
+                {
+                    currentPos.y = collisionRect.anchoredPosition.y+40f;
+                    m_rectTransform.anchoredPosition = currentPos;
+                }
             }
 
-            // 隐藏主物体Image
-            if (m_MainImage != null)
-            {
-                m_MainImage.gameObject.SetActive(false);
-            }
-
+            int aniScore = 0;
             // 显示子物体Image并随机设置精灵
             if (m_ChildImage != null && m_Sprites != null && m_Sprites.Length > 0)
             {
+                // 关闭箱子
+                if (m_FlySave != null)
+                {
+                    m_FlySave.gameObject.SetActive(false);
+                }
+
                 m_ChildImage.gameObject.SetActive(true);
                 int randomIndex = UnityEngine.Random.Range(0, m_Sprites.Length);
                 m_ChildImage.sprite = m_Sprites[randomIndex];
+                aniScore = scores[randomIndex];
+                
+                // 设置分数文本初始位置和透明度
+                if (scoreText != null)
+                {
+                    scoreText.gameObject.SetActive(true);
+                    scoreText.text = string.Format("+{0}", aniScore);
+                    scoreText.color = new Color(1f, 1f, 1f, 1f);
+                    RectTransform scoreRect = scoreText.GetComponent<RectTransform>();
+                    if (scoreRect != null)
+                    {
+                        Vector2 startPos = scoreRect.anchoredPosition;
+                        
+                        // 清理之前的动画
+                        if (m_currentSequence != null)
+                        {
+                            m_currentSequence.Kill();
+                        }
+                        
+                        // 创建飘动和淡出动画
+                        m_currentSequence = DOTween.Sequence();
+                        
+                        // 使用安全的动画创建方式
+                        var moveTween = scoreRect.DOAnchorPosY(startPos.y + 200f, 0.8f).SetEase(Ease.OutQuad);
+                        var fadeTween = scoreText.DOFade(0f, 0.8f);
+                        
+                        m_currentSequence.Append(moveTween);
+                        m_currentSequence.Join(fadeTween);
+                        m_currentSequence.OnComplete(() => {
+                            // 使用静态方法安全地处理动画完成
+                            SafeHandleAnimationComplete(scoreText);
+                        });
+                        
+                        // 设置动画的目标检查
+                        moveTween.SetTarget(scoreRect);
+                        fadeTween.SetTarget(scoreText);
+                    }
+                }
             }
-
-            // 1秒后销毁物体
-            StartCoroutine(DestroyAfterDelay(1f));
+        
+            // 触发全局加分事件
+            GameEventManager.TriggerScoreAdded(aniScore);
         }
         if (collision.gameObject.layer == LayerMask.NameToLayer("JumpBad"))
         {
             // 触发全局加分事件
             GameEventManager.TriggerScoreAdded(25);
-
+            // 触发金币增加事件
+            A_AudioManager.Instance.PlaySound("qian",1f);
+            GameEventManager.TriggerGoldAdded(1);
             // 停止所有移动
             m_isMoving = false;
             m_isFalling = false;
@@ -128,13 +207,47 @@ public class FlyScore : MonoBehaviour
                 // 添加上升力
                 m_rigidbody.AddForce(Vector2.up * m_explosionForce * 2f, ForceMode2D.Impulse);
             }
+
+            // 生成金币并播放动画
+            if (m_flygolgPrefab != null)
+            {
+                Flygolg flygolg = Instantiate(m_flygolgPrefab, transform.parent);
+                flygolg.transform.position = transform.position;
+                flygolg.PlayGoldAnimation();
+            }
         }
     }
 
-    private IEnumerator DestroyAfterDelay(float delay)
+    // 静态方法安全地处理动画完成
+    private static void SafeHandleAnimationComplete(Text scoreText)
     {
-        yield return new WaitForSeconds(delay);
-        Destroy(gameObject);
+        try
+        {
+            if (scoreText != null && scoreText.gameObject != null)
+            {
+                scoreText.gameObject.SetActive(false);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"SafeHandleAnimationComplete error: {e.Message}");
+        }
+    }
+
+    private IEnumerator DestroyNextFrame()
+    {
+        yield return null;
+        try
+        {
+            if (this != null && gameObject != null)
+            {
+                Destroy(gameObject);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"DestroyNextFrame error: {e.Message}");
+        }
     }
 
     public void Init(int qiuCount)

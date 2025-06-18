@@ -22,6 +22,7 @@ public class A_SettingPanel : MonoBehaviour
     {
         Application.targetFrameRate = 60;
         CloseBtn.onClick.AddListener(()=>{
+             A_AudioManager.Instance.PlaySound("anniu",1f);
             Time.timeScale = 1;
             gameObject.SetActive(false);
         });

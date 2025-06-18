@@ -35,10 +35,15 @@ public class Flyqiu : MonoBehaviour
         {
             if (collision.gameObject.layer == LayerMask.NameToLayer("FlyBaby"))
             { 
-                A_AudioManager.Instance.PlaySound("qiubao",1f);
-                Iscolloder = true;
-                OnQiu?.Invoke();
-                Debug.Log("碰撞: " + collision.gameObject.name);
+                FlyBaby flyScore = collision.gameObject.GetComponent<FlyBaby>();
+                if (flyScore != null){
+                if (flyScore.m_canCollide == true)
+                    A_AudioManager.Instance.PlaySound("qiubao",1f);
+                    Iscolloder = true;
+                    OnQiu?.Invoke();
+                    Debug.Log("碰撞: " + collision.gameObject.name);
+                    flyScore.StartCollisionCooldown();
+                }
             }
         }
 

@@ -19,7 +19,7 @@ public class Aloading : MonoBehaviour
         ProgressImage.fillAmount = 0;
         m_Running = false;
         startbtn.onClick.AddListener(() => 
-        {
+        { A_AudioManager.Instance.PlaySound("anniu",1f);
             gameObject.SetActive(false);
         });
     }

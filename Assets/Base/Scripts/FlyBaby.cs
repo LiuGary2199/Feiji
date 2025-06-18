@@ -1,5 +1,8 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI; // ����UI�����ռ�
+using UnityEngine.UI; // UIռ
+using DG.Tweening;
 
 public class FlyBaby : MonoBehaviour
 {
@@ -31,21 +34,75 @@ public class FlyBaby : MonoBehaviour
     private int BottomLayerID;
     private int ShejianLayerID;
 
-
+    public bool m_canCollide = true; // 是否可以碰撞
     private RectTransform m_rectTransform;
+
+    public Image m_MainImage;        // 主物体的Image组件
+    public Image m_ChildImage;       // 子物体的Image组件
+    public Sprite[] m_Sprites;       // 精灵数组
+    private Sequence m_currentSequence; // 当前动画序列
+    private bool m_isDestroying = false; // 是否正在销毁中
+
+    private void Awake()
+    {
+        m_rectTransform = GetComponent<RectTransform>();
+        // 确保子物体Image初始时是关闭的
+        if (m_ChildImage != null)
+        {
+            m_ChildImage.gameObject.SetActive(false);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // 清理所有动画
+        if (m_currentSequence != null)
+        {
+            m_currentSequence.Kill();
+            m_currentSequence = null;
+        }
+    }
+
+
+    private IEnumerator DestroyNextFrame()
+    {
+        yield return null;
+        if (gameObject != null)
+        {
+            Destroy(gameObject);
+        }
+    }
 
     public void Rest()
     {
-        rb.bodyType = RigidbodyType2D.Static;
+                rb.bodyType = RigidbodyType2D.Static;
         m_rectTransform.anchoredPosition = new Vector2(-450, 700);
+        // 清理所有动画
+        if (m_currentSequence != null)
+        {
+            m_currentSequence.Kill();
+            m_currentSequence = null;
+        }
+        m_isDestroying = false;
     }
 
     public void StartFly()
-    {
+    {m_canCollide = true; // 是否可以碰撞
         rb.bodyType = RigidbodyType2D.Dynamic;
         Jump();
     }
+    // 启动碰撞冷却
+    public void StartCollisionCooldown()
+    {
+        m_canCollide = false;
+        StartCoroutine(CollisionCooldown());
+    }
 
+    private IEnumerator CollisionCooldown()
+    {
+        yield return new WaitForSeconds(0.1f);
+        m_canCollide = true;
+    }
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -99,7 +156,7 @@ public class FlyBaby : MonoBehaviour
             float currentXSpeed = isFlyingRight ? forwardSpeed : -forwardSpeed;
             rb.velocity = new Vector2(currentXSpeed, 0);
             rb.AddForce(Vector2.up * upForce, ForceMode2D.Impulse);
-
+            A_AudioManager.Instance.PlaySound("tan",1f);
             // 播放声音效果
             if (flySound != null)
             {

@@ -49,6 +49,8 @@ public class BottomArea : MonoBehaviour
     private List<FlyScore> m_activeFlyScores = new List<FlyScore>(); // 存储所有活动的FlyScore
     private Coroutine m_spawnFlyScoreCoroutine1; // 第一个生成协程
     private Coroutine m_spawnFlyScoreCoroutine2; // 第二个生成协程
+    private Coroutine m_spawnFlyScoreCoroutine3; // 第三个生成协程
+    private float m_nextSpawnTime3; // 第三种生成方式的下次生成时间
 
     private const string GOLD_KEY = "PlayerGold"; // 金币存储的键名
 
@@ -128,6 +130,10 @@ public class BottomArea : MonoBehaviour
         if (m_spawnFlyScoreCoroutine2 != null)
         {
             StopCoroutine(m_spawnFlyScoreCoroutine2);
+        }
+        if (m_spawnFlyScoreCoroutine3 != null)
+        {
+            StopCoroutine(m_spawnFlyScoreCoroutine3);
         }
         // 清理所有FlyScore
         CleanupAllFlyScores();
@@ -289,6 +295,21 @@ public class BottomArea : MonoBehaviour
                 GameEventManager.TriggerGoldTimeEnd();
             }
         }
+
+        // 更新第三种生成方式的倒计时
+        if (m_isGenerating)
+        {
+            m_nextSpawnTime3 -= Time.deltaTime;
+            if (m_nextSpawnTime3 <= 0)
+            {
+                // 生成新的随机时间
+                m_nextSpawnTime3 = Random.Range(4f, 8f);
+                // 生成新的FlyScore
+                int trajectoryType = Random.Range(0, 3);
+                int qiuCount = GetRandomBallCount();
+                SpawnFlyScoreWithTrajectory(trajectoryType, qiuCount);
+            }
+        }
     }
 
     private IEnumerator SpawnFlyScore1()
@@ -374,6 +395,8 @@ public class BottomArea : MonoBehaviour
         // 启动两个生成协程
         m_spawnFlyScoreCoroutine1 = StartCoroutine(SpawnFlyScore1());
         m_spawnFlyScoreCoroutine2 = StartCoroutine(SpawnFlyScore2());
+        // 初始化第三种生成方式的时间
+        m_nextSpawnTime3 = Random.Range(4f, 8f);
     }
 
     public void StopGenerating()
