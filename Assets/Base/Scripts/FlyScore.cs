@@ -61,6 +61,16 @@ public class FlyScore : MonoBehaviour
             m_currentSequence.Kill();
             m_currentSequence = null;
         }
+        
+        // 清理所有Flyqiu
+        foreach (var qiu in m_flyqiuList)
+        {
+            if (qiu != null)
+            {
+                Destroy(qiu.gameObject);
+            }
+        }
+        m_flyqiuList.Clear();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -173,6 +183,11 @@ public class FlyScore : MonoBehaviour
                         m_currentSequence.OnComplete(() => {
                             // 使用静态方法安全地处理动画完成
                             SafeHandleAnimationComplete(scoreText);
+                            // 延迟一帧销毁，确保动画完全结束
+                            if (this != null)
+                            {
+                                StartCoroutine(DestroyNextFrame());
+                            }
                         });
                         
                         // 设置动画的目标检查
@@ -262,7 +277,11 @@ public class FlyScore : MonoBehaviour
             {
                 // 触发生命值减少事件
                 GameEventManager.TriggerLifeLost();
-                Destroy(gameObject);
+                if (!m_isDestroying)
+                {
+                    m_isDestroying = true;
+                    Destroy(gameObject);
+                }
             };
         }
     }
@@ -358,8 +377,9 @@ public class FlyScore : MonoBehaviour
             m_rectTransform.anchoredPosition = currentPos;
 
             // 如果落到地面（y <= 0），销毁物体
-            if (currentPos.y <= 0)
+            if (currentPos.y <= 0 && !m_isDestroying)
             {
+                m_isDestroying = true;
                 Destroy(gameObject);
             }
         }

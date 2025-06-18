@@ -53,6 +53,7 @@ public class AGameManage : MonoBehaviour
 
     private void HandleGameOver()
     {
+        Time.timeScale = 0f;
         if (m_isFuhuo){
              A_AudioManager.Instance.PlaySound("jiesuan",1f);
             m_GameOverPanelScript.Show(m_bottomArea.GetScore(), m_bottomArea.GetGold());
@@ -68,22 +69,32 @@ public class AGameManage : MonoBehaviour
 
     private void HandleGameRestart() // 重新开始
     {
+        Time.timeScale = 1f;
          m_isFuhuo = false;
          m_flyBaby.Rest();
+         StopShotArea();
          m_flyBaby.StartFly();
          m_bottomArea.RestUI();
          m_shotArea.ResetUI();
+         StartShotArea();
         // 开始游戏
         StartGame();
     }
 
     private void HandleGameContinue()// 继续游戏
     {
+                Time.timeScale = 1f;
          m_isFuhuo = true;
          m_flyBaby.Rest();
           m_flyBaby.StartFly();
         // 恢复生命值
         m_bottomArea.RestoreLife();
+        // 重置射击计时并重新启动
+        if (m_shotArea != null)
+        {
+            m_shotArea.ResetShotTimer();
+            m_shotArea.StartShooting();
+        }
         // 继续游戏
         StartGame();
     }

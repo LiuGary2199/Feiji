@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,28 +10,35 @@ public class GameOverPanel : MonoBehaviour
     public Text m_ScoreText;          // 显示最终分数
     public Button m_JieSuanButton; // 看广告继续按钮
     public Action OnJiesuan;
+    public Action OnADFail;
+    public GameObject FailPanel;
+    private Coroutine m_failPanelCoroutine; // 存储FailPanel协程的引用
+
     private void Start()
     {
+        // 确保FailPanel初始时是关闭的
+        if (FailPanel != null)
+        {
+            FailPanel.SetActive(false);
+        }
 
- if (m_RestartButton!=null){
+        if (m_RestartButton!=null){
           m_RestartButton.onClick.AddListener(() =>
         {
-                                A_AudioManager.Instance.PlaySound("anniu",1f);
+            A_AudioManager.Instance.PlaySound("anniu",1f);
            OnRestartClick();
         });
- }
+        }
 
         if (m_JieSuanButton!=null){
             m_JieSuanButton.onClick.AddListener(() =>
                 {
-                                        A_AudioManager.Instance.PlaySound("anniu",1f);
+                    A_AudioManager.Instance.PlaySound("anniu",1f);
                     gameObject.SetActive(false);
                     OnJiesuan?.Invoke();
                 });
-
         }
         
-
         m_AdContinueButton.onClick.AddListener(() =>
         {
             A_ADManager.Instance.playRewardVideo((success) =>
@@ -43,7 +51,8 @@ public class GameOverPanel : MonoBehaviour
                 }
                 else
                 {
-                  
+                  OnADFail?.Invoke();
+                  ShowFailPanel();
                 }
             });
         });
@@ -58,15 +67,50 @@ public class GameOverPanel : MonoBehaviour
          if (m_AdContinueButton!=null){
             m_AdContinueButton.onClick.RemoveListener(OnAdContinueClick);
          }
-
-       
         
+        // 停止FailPanel协程
+        if (m_failPanelCoroutine != null)
+        {
+            StopCoroutine(m_failPanelCoroutine);
+        }
+    }
+
+    // 显示FailPanel
+    private void ShowFailPanel()
+    {
+        if (FailPanel != null)
+        {
+            // 停止之前的协程
+            if (m_failPanelCoroutine != null)
+            {
+                StopCoroutine(m_failPanelCoroutine);
+            }
+            
+            FailPanel.SetActive(true);
+            m_failPanelCoroutine = StartCoroutine(HideFailPanelAfterDelay(1f));
+        }
+    }
+
+    // 延迟关闭FailPanel的协程
+    private IEnumerator HideFailPanelAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (FailPanel != null)
+        {
+            FailPanel.SetActive(false);
+        }
+        m_failPanelCoroutine = null;
     }
 
     // 显示游戏结束界面
     public void Show(int score, int gold)
     {
         gameObject.SetActive(true);
+        // 确保FailPanel是关闭的
+        if (FailPanel != null)
+        {
+            FailPanel.SetActive(false);
+        }
         // 更新分数和金币显示
         m_ScoreText.text = score.ToString();
     }
@@ -75,6 +119,17 @@ public class GameOverPanel : MonoBehaviour
     public void Hide()
     {
         gameObject.SetActive(false);
+        // 同时关闭FailPanel
+        if (FailPanel != null)
+        {
+            FailPanel.SetActive(false);
+        }
+        // 停止FailPanel协程
+        if (m_failPanelCoroutine != null)
+        {
+            StopCoroutine(m_failPanelCoroutine);
+            m_failPanelCoroutine = null;
+        }
     }
 
     // 重新开始按钮点击事件

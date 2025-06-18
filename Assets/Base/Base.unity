@@ -4269,7 +4269,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.3882353}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.5803922}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -5672,6 +5672,7 @@ MonoBehaviour:
   m_AdContinueButton: {fileID: 125887840}
   m_ScoreText: {fileID: 1441940575}
   m_JieSuanButton: {fileID: 0}
+  FailPanel: {fileID: 2038529429}
 --- !u!222 &1346853021
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -8578,6 +8579,7 @@ MonoBehaviour:
   m_AdContinueButton: {fileID: 1503175669}
   m_ScoreText: {fileID: 253069323}
   m_JieSuanButton: {fileID: 251391348}
+  FailPanel: {fileID: 2038529429}
 --- !u!1 &2086867318
 GameObject:
   m_ObjectHideFlags: 0

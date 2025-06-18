@@ -172,4 +172,18 @@ public class ShotArea : MonoBehaviour
             m_ShotButton.interactable = true;
         }
     }
+
+    // 重置射击计时
+    public void ResetShotTimer()
+    {
+        // 停止当前射击协程
+        if (m_shotCoroutine != null)
+        {
+            StopCoroutine(m_shotCoroutine);
+            m_shotCoroutine = null;
+        }
+        // 隐藏闪烁效果
+        m_flashImage.gameObject.SetActive(false);
+        m_isFlashing = false;
+    }
 }
