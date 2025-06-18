@@ -196,6 +196,7 @@ MonoBehaviour:
   MAX_REWARD_ID: bd9176be9428df74
   MAX_INTER_ID: 4618b0addc3b011c
   isTest: 0
+  FailPanel: {fileID: 2038529429}
 --- !u!4 &48107500
 Transform:
   m_ObjectHideFlags: 0
@@ -5672,7 +5673,6 @@ MonoBehaviour:
   m_AdContinueButton: {fileID: 125887840}
   m_ScoreText: {fileID: 1441940575}
   m_JieSuanButton: {fileID: 0}
-  FailPanel: {fileID: 2038529429}
 --- !u!222 &1346853021
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -8579,7 +8579,6 @@ MonoBehaviour:
   m_AdContinueButton: {fileID: 1503175669}
   m_ScoreText: {fileID: 253069323}
   m_JieSuanButton: {fileID: 251391348}
-  FailPanel: {fileID: 2038529429}
 --- !u!1 &2086867318
 GameObject:
   m_ObjectHideFlags: 0

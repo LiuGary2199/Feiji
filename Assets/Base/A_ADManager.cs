@@ -12,6 +12,7 @@ public class A_ADManager : MonoBehaviour
     public string MAX_REWARD_ID = "8cc44f23f3a78029";
     public string MAX_INTER_ID = "6e02aadb78d3ce0c";
     public bool isTest = false;
+    public GameObject FailPanel;
     public static A_ADManager Instance { get; private set; }
 
     // 广告加载状态
@@ -20,7 +21,7 @@ public class A_ADManager : MonoBehaviour
 
     Action<bool> OnRewardAdCompleted;
     bool isRewardAdCompleted = false;
-
+    private Coroutine m_failPanelCoroutine; // 存储FailPanel协程的引用
 
     private void Awake()
     {
@@ -90,6 +91,7 @@ public class A_ADManager : MonoBehaviour
     public void playRewardVideo(Action<bool> OnRewardAdCompleted)
     {
         this.OnRewardAdCompleted = OnRewardAdCompleted;
+        hasRewardAdLoaded = false ;
         if (hasRewardAdLoaded)
         {
             if (isTest)
@@ -102,6 +104,7 @@ public class A_ADManager : MonoBehaviour
         }
         else
         {
+            ShowFailPanel();
             Debug.LogWarning("激励视频未加载");
             LoadRewardAd();
         }
@@ -168,6 +171,39 @@ public class A_ADManager : MonoBehaviour
     {
         hasInterstitialAdLoaded = false;
         LoadInterstitialAd();
+    }
+
+    // 显示FailPanel
+    private void ShowFailPanel()
+    {
+        if (FailPanel != null)
+        {
+            // 停止之前的协程
+            if (m_failPanelCoroutine != null)
+            {
+                StopCoroutine(m_failPanelCoroutine);
+            }
+
+            FailPanel.SetActive(true);
+            m_failPanelCoroutine = StartCoroutine(HideFailPanelAfterDelay(1f));
+        }
+    }
+
+    // 延迟关闭FailPanel的协程
+    private IEnumerator HideFailPanelAfterDelay(float delay)
+    {
+
+        float elapsedTime = 0f;
+        while (elapsedTime < delay)
+        {
+            elapsedTime += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        if (FailPanel != null)
+        {
+            FailPanel.SetActive(false);
+        }
+        m_failPanelCoroutine = null;      
     }
     #endregion
 }
